@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unisphere — Campus Portal (v8)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+  <div class="max-w-3xl mx-auto px-4 py-6 sm:py-8">
+    <!-- Part 1: Header, Display Name, Role Switcher & Navigation Tabs -->
+    <header class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm mb-5">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+            U
+          </div>
+          <div>
+            <h1 class="text-xl font-bold tracking-tight text-slate-900">Unisphere</h1>
+            <p class="text-xs text-slate-500">Zero-cost student &amp; faculty portal · Step 8 (Faculty Passcode)</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            id="display-name"
+            placeholder="Your name (optional)"
+            class="w-40 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+          />
+          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl" role="group" aria-label="Switch role">
+            <button
+              type="button"
+              id="role-student"
+              class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            >
+              Student
+            </button>
+            <button
+              type="button"
+              id="role-faculty"
+              class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            >
+              Faculty
+            </button>
+          </div>
+          <button
+            type="button"
+            id="lock-faculty-btn"
+            class="hidden px-2.5 py-1.5 rounded-lg border border-amber-200 bg-amber-50 hover:bg-amber-100 text-xs font-medium text-amber-800 transition-colors"
+          >
+            Lock
+          </button>
+        </div>
+      </div>
+
+      <!-- Inline Faculty Passcode Prompt -->
+      <div id="faculty-gate" class="hidden mt-3 pt-3 border-t border-slate-100 bg-amber-50/70 rounded-xl p-3">
+        <form id="faculty-pass-form" class="flex flex-wrap items-center gap-2">
+          <label for="faculty-pass-input" class="text-xs font-semibold text-amber-900">
+            Enter faculty passcode:
+          </label>
+          <input
+            type="password"
+            id="faculty-pass-input"
+            placeholder="Demo: faculty123"
+            class="w-40 rounded-lg border border-amber-200 bg-white px-2.5 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+          <button
+            type="submit"
+            class="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium transition-colors"
+          >
+            Unlock
+          </button>
+          <button
+            type="button"
+            id="faculty-cancel-btn"
+            class="px-2.5 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-900"
+          >
+            Cancel
+          </button>
+          <span id="faculty-pass-error" class="hidden text-xs font-medium text-rose-600">
+            Incorrect passcode.
+          </span>
+        </form>
+      </div>
+
+      <!-- Tabs + Cloud Sync + Export/Import Bar -->
+      <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-1.5" role="tablist" aria-label="Portal sections">
+          <button
+            type="button"
+            id="tab-feed"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+          >
+            Course Feed
+          </button>
+          <button
+            type="button"
+            id="tab-requests"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
+          >
+            <span>Office Hours &amp; Leave</span>
+            <span id="pending-badge" class="hidden px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">0</span>
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            id="cloud-toggle-btn"
+            class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 transition-colors flex items-center gap-1.5"
+          >
+            <span id="cloud-dot" class="w-2 h-2 rounded-full bg-slate-300"></span>
+            <span>Cloud Sync</span>
+          </button>
+          <button
+            type="button"
+            id="export-btn"
+            class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 transition-colors"
+          >
+            Export JSON
+          </button>
+          <button
+            type="button"
+            id="import-btn"
+            class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 transition-colors"
+          >
+            Import JSON
+          </button>
+          <input type="file" id="import-file" accept=".json,application/json" class="hidden" />
+        </div>
+      </div>
+
+      <!-- Collapsible Cloud Sync Panel -->
+      <div id="cloud-panel" class="hidden mt-3 pt-3 border-t border-slate-100 bg-slate-50 rounded-xl p-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-slate-700">Connect Supabase (optional — syncs Course Feed across devices)</span>
+          <button type="button" id="cloud-close-btn" class="text-xs text-slate-400 hover:text-slate-700">Close</button>
+        </div>
+        <form id="cloud-form" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+          <input
+            type="url"
+            id="sb-url-input"
+            placeholder="https://your-project.supabase.co"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <input
+            type="text"
+            id="sb-key-input"
+            placeholder="Paste Supabase anon public key"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <div class="sm:col-span-2 flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors"
+            >
+              Connect &amp; Sync
+            </button>
+            <button
+              type="button"
+              id="cloud-refresh-btn"
+              class="hidden px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-medium text-slate-700 transition-colors"
+            >
+              Refresh Feed
+            </button>
+            <button
+              type="button"
+              id="cloud-disconnect-btn"
+              class="hidden px-3 py-1.5 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-xs font-medium text-rose-600 transition-colors"
+            >
+              Disconnect
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="mt-2">
+        <span id="status-toast" class="text-xs text-slate-500">
+          Local mode: posts save automatically in your browser.
+        </span>
+      </div>
+    </header>
+
+    <!-- VIEW 1: Course Feed -->
+    <div id="view-feed">
+      <!-- Post Composer -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm mb-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-slate-800">Post an update or question</h2>
+          <span id="composer-badge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+            Posting as Student
+          </span>
+        </div>
+
+        <form id="post-form" class="space-y-3">
+          <textarea
+            id="post-text"
+            rows="3"
+            placeholder="Ask a question, share lab notes, or post a class announcement..."
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+          ></textarea>
+
+          <div id="form-error" class="hidden text-xs text-rose-600 font-medium">
+            Please write a message before posting.
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <label for="post-channel" class="text-xs font-medium text-slate-600">Channel:</label>
+              <select
+                id="post-channel"
+                class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              ></select>
+            </div>
+
+            <button
+              type="submit"
+              class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm"
+            >
+              Post to Feed
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Search, Channel Manager, Filter & Live Feed -->
+      <section>
+        <div class="flex flex-col sm:flex-row gap-2.5 mb-3">
+          <input
+            type="search"
+            id="search-input"
+            placeholder="Search posts or replies..."
+            class="flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+          <form id="channel-form" class="flex items-center gap-1.5">
+            <input
+              type="text"
+              id="new-channel-input"
+              placeholder="New channel..."
+              class="w-36 sm:w-40 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <button
+              type="submit"
+              class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-medium text-slate-700 shadow-sm transition-colors"
+            >
+              + Add
+            </button>
+          </form>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+          <div class="flex flex-wrap items-center gap-1.5" id="filter-bar"></div>
+          <div class="flex items-center gap-3">
+            <span id="post-count" class="text-xs text-slate-500 font-medium"></span>
+            <button
+              type="button"
+              id="reset-btn"
+              class="text-xs text-slate-400 hover:text-slate-700 underline underline-offset-2 transition-colors"
+            >
+              Reset demo
+            </button>
+          </div>
+        </div>
+
+        <div id="feed" class="space-y-3"></div>
+      </section>
+    </div>
+
+    <!-- VIEW 2: Office Hours & Leave Requests -->
+    <div id="view-requests" class="hidden">
+      <section class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm mb-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-slate-800">Submit an office-hours or leave request</h2>
+          <span id="request-badge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+            Submitting as Student
+          </span>
+        </div>
+
+        <form id="request-form" class="space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="request-type" class="block text-xs font-medium text-slate-600 mb-1">Request type</label>
+              <select
+                id="request-type"
+                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Office Hours">Office Hours Slot</option>
+                <option value="Leave Request">Course Leave Request</option>
+              </select>
+            </div>
+            <div>
+              <label for="request-when" class="block text-xs font-medium text-slate-600 mb-1">Date / preferred time</label>
+              <input
+                type="text"
+                id="request-when"
+                placeholder="e.g. Fri, 3:30 PM or Nov 15"
+                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              />
+            </div>
+          </div>
+
+          <textarea
+            id="request-reason"
+            rows="2"
+            placeholder="Briefly explain what you'd like to discuss or the reason for leave..."
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+          ></textarea>
+
+          <div id="request-error" class="hidden text-xs text-rose-600 font-medium">
+            Please enter both a date/time and a reason.
+          </div>
+
+          <div class="flex justify-end">
+            <button
+              type="submit"
+              class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-sm"
+            >
+              Submit Request
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Submitted Requests</h3>
+          <span id="request-count" class="text-xs text-slate-500 font-medium"></span>
+        </div>
+        <div id="requests-list" class="space-y-3"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // Optional: change this demo passcode before sharing, or upgrade to Supabase Auth later
+    const FACULTY_PASSCODE = 'faculty123';
+
+    // Optional: paste your Supabase keys directly here when hosting online
+    const DEFAULT_SUPABASE_URL = '';
+    const DEFAULT_SUPABASE_ANON_KEY = '';
+
+    // 1. Starter Data & Storage Helpers
+    const POSTS_STORAGE_KEY = 'unisphere_posts_v8';
+    const CHANNELS_STORAGE_KEY = 'unisphere_channels_v8';
+    const REQUESTS_STORAGE_KEY = 'unisphere_requests_v8';
+    const NAME_STORAGE_KEY = 'unisphere_name_v8';
+    const CLOUD_CFG_STORAGE_KEY = 'unisphere_cloud_cfg_v8';
+
+    const DEFAULT_CHANNELS = [
+      'Systems & Compilers',
+      'Applied Statistics',
+      'General'
+    ];
+
+    const DEFAULT_POSTS = [
+      {
+        id: 1,
+        role: 'Faculty',
+        author: 'Faculty',
+        channel: 'Systems & Compilers',
+        text: 'Lab 4 parser assignment is due Friday at 5:00 PM. Make sure your grammar handles negative numbers and division by zero.',
+        time: '10 mins ago',
+        pinned: true,
+        resolved: false,
+        replies: [
+          {
+            id: 101,
+            role: 'Student',
+            author: 'Student',
+            text: 'Should unary minus have higher precedence than multiplication?',
+            time: '5 mins ago'
+          }
+        ]
+      },
+      {
+        id: 2,
+        role: 'Student',
+        author: 'Student',
+        channel: 'Applied Statistics',
+        text: 'Does anyone have the dataset format for tomorrow’s regression exercise?',
+        time: '25 mins ago',
+        pinned: false,
+        resolved: false,
+        replies: []
+      },
+      {
+        id: 3,
+        role: 'Faculty',
+        author: 'Faculty',
+        channel: 'General',
+        text: 'Office hours today will be in Room 204 from 3:00 PM to 4:30 PM.',
+        time: '1 hour ago',
+        pinned: false,
+        resolved: false,
+        replies: []
+      }
+    ];
+
+    const DEFAULT_REQUESTS = [
+      {
+        id: 501,
+        author: 'Student',
+        type: 'Office Hours',
+        when: 'Tomorrow, 3:30 PM',
+        reason: 'Reviewing Yacc shift/reduce conflict in arithmetic parser.',
+        status: 'Pending'
+      }
+    ];
+
+    function loadChannels() {
+      try {
+        const raw = localStorage.getItem(CHANNELS_STORAGE_KEY) || localStorage.getItem('unisphere_channels_v7');
+        if (!raw) return [...DEFAULT_CHANNELS];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) && parsed.length > 0 ? parsed : [...DEFAULT_CHANNELS];
+      } catch (err) {
+        return [...DEFAULT_CHANNELS];
+      }
+    }
+
+    function saveChannels() {
+      try {
+        localStorage.setItem(CHANNELS_STORAGE_KEY, JSON.stringify(channels));
+      } catch (err) {}
+    }
+
+    function loadPosts() {
+      try {
+        const raw = localStorage.getItem(POSTS_STORAGE_KEY) || localStorage.getItem('unisphere_posts_v7');
+        if (!raw) return structuredClone(DEFAULT_POSTS);
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return structuredClone(DEFAULT_POSTS);
+        return parsed.map((p) => ({
+          ...p,
+          author: p.author || p.role || 'Member',
+          pinned: Boolean(p.pinned),
+          resolved: Boolean(p.resolved),
+          replies: Array.isArray(p.replies)
+            ? p.replies.map((r) => ({ ...r, author: r.author || r.role || 'Member' }))
+            : []
+        }));
+      } catch (err) {
+        return structuredClone(DEFAULT_POSTS);
+      }
+    }
+
+    function savePostsLocal() {
+      try {
+        localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(posts));
+      } catch (err) {}
+    }
+
+    function loadRequests() {
+      try {
+        const raw = localStorage.getItem(REQUESTS_STORAGE_KEY) || localStorage.getItem('unisphere_requests_v7');
+        if (!raw) return structuredClone(DEFAULT_REQUESTS);
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : structuredClone(DEFAULT_REQUESTS);
+      } catch (err) {
+        return structuredClone(DEFAULT_REQUESTS);
+      }
+    }
+
+    function saveRequests() {
+      try {
+        localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(requests));
+      } catch (err) {}
+    }
+
+    function loadName() {
+      try {
+        return localStorage.getItem(NAME_STORAGE_KEY) || localStorage.getItem('unisphere_name_v7') || '';
+      } catch (err) {
+        return '';
+      }
+    }
+
+    function saveName(name) {
+      try {
+        localStorage.setItem(NAME_STORAGE_KEY, name);
+      } catch (err) {}
+    }
+
+    function loadCloudConfig() {
+      if (DEFAULT_SUPABASE_URL && DEFAULT_SUPABASE_ANON_KEY) {
+        return { url: DEFAULT_SUPABASE_URL, key: DEFAULT_SUPABASE_ANON_KEY };
+      }
+      try {
+        const raw = localStorage.getItem(CLOUD_CFG_STORAGE_KEY) || localStorage.getItem('unisphere_cloud_cfg_v7');
+        if (!raw) return { url: '', key: '' };
+        const parsed = JSON.parse(raw);
+        return { url: parsed.url || '', key: parsed.key || '' };
+      } catch (err) {
+        return { url: '', key: '' };
+      }
+    }
+
+    function saveCloudConfig(url, key) {
+      try {
+        localStorage.setItem(CLOUD_CFG_STORAGE_KEY, JSON.stringify({ url, key }));
+      } catch (err) {}
+    }
+
+    // 2. App State
+    let currentRole = 'Student';
+    let facultyUnlocked = false;
+    let activeTab = 'feed';
+    let displayName = loadName();
+    let activeFilter = 'All';
+    let searchQuery = '';
+    let pendingDeleteId = null;
+    let channels = loadChannels();
+    let posts = loadPosts();
+    let requests = loadRequests();
+    let cloudConfig = loadCloudConfig();
+    let sbClient = null;
+
+    // 3. DOM References
+    const displayNameInput = document.getElementById('display-name');
+    const roleStudentBtn = document.getElementById('role-student');
+    const roleFacultyBtn = document.getElementById('role-faculty');
+    const lockFacultyBtn = document.getElementById('lock-faculty-btn');
+    const facultyGate = document.getElementById('faculty-gate');
+    const facultyPassForm = document.getElementById('faculty-pass-form');
+    const facultyPassInput = document.getElementById('faculty-pass-input');
+    const facultyCancelBtn = document.getElementById('faculty-cancel-btn');
+    const facultyPassError = document.getElementById('faculty-pass-error');
+    const tabFeedBtn = document.getElementById('tab-feed');
+    const tabRequestsBtn = document.getElementById('tab-requests');
+    const pendingBadge = document.getElementById('pending-badge');
+    const viewFeedEl = document.getElementById('view-feed');
+    const viewRequestsEl = document.getElementById('view-requests');
+    const composerBadge = document.getElementById('composer-badge');
+    const requestBadge = document.getElementById('request-badge');
+    const statusToast = document.getElementById('status-toast');
+    const cloudToggleBtn = document.getElementById('cloud-toggle-btn');
+    const cloudDot = document.getElementById('cloud-dot');
+    const cloudPanel = document.getElementById('cloud-panel');
+    const cloudCloseBtn = document.getElementById('cloud-close-btn');
+    const cloudForm = document.getElementById('cloud-form');
+    const sbUrlInput = document.getElementById('sb-url-input');
+    const sbKeyInput = document.getElementById('sb-key-input');
+    const cloudRefreshBtn = document.getElementById('cloud-refresh-btn');
+    const cloudDisconnectBtn = document.getElementById('cloud-disconnect-btn');
+    const exportBtn = document.getElementById('export-btn');
+    const importBtn = document.getElementById('import-btn');
+    const importFileInput = document.getElementById('import-file');
+    const postForm = document.getElementById('post-form');
+    const postText = document.getElementById('post-text');
+    const postChannel = document.getElementById('post-channel');
+    const formError = document.getElementById('form-error');
+    const searchInput = document.getElementById('search-input');
+    const channelForm = document.getElementById('channel-form');
+    const newChannelInput = document.getElementById('new-channel-input');
+    const filterBar = document.getElementById('filter-bar');
+    const postCount = document.getElementById('post-count');
+    const resetBtn = document.getElementById('reset-btn');
+    const feedEl = document.getElementById('feed');
+
+    const requestForm = document.getElementById('request-form');
+    const requestType = document.getElementById('request-type');
+    const requestWhen = document.getElementById('request-when');
+    const requestReason = document.getElementById('request-reason');
+    const requestError = document.getElementById('request-error');
+    const requestCount = document.getElementById('request-count');
+    const requestsList = document.getElementById('requests-list');
+
+    displayNameInput.value = displayName;
+    sbUrlInput.value = cloudConfig.url;
+    sbKeyInput.value = cloudConfig.key;
+
+    // 4. Cloud Sync Helpers (Supabase)
+    function updateCloudIndicator() {
+      const connected = Boolean(sbClient);
+      cloudDot.className = connected
+        ? 'w-2 h-2 rounded-full bg-emerald-500'
+        : 'w-2 h-2 rounded-full bg-slate-300';
+      cloudRefreshBtn.classList.toggle('hidden', !connected);
+      cloudDisconnectBtn.classList.toggle('hidden', !connected);
+    }
+
+    async function fetchRemotePosts() {
+      if (!sbClient) return;
+      const { data, error } = await sbClient
+        .from('posts')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) {
+        showStatus('Supabase sync error: ' + error.message, true);
+        return;
+      }
+
+      if (Array.isArray(data)) {
+        posts = data.map((p) => ({
+          ...p,
+          author: p.author || p.role || 'Member',
+          pinned: Boolean(p.pinned),
+          resolved: Boolean(p.resolved),
+          replies: Array.isArray(p.replies) ? p.replies : []
+        }));
+        savePostsLocal();
+        renderFeed();
+        showStatus('Synced ' + posts.length + ' posts from Supabase.', false);
+      }
+    }
+
+    async function syncPostToCloud(post) {
+      if (!sbClient) return;
+      const { error } = await sbClient.from('posts').upsert([post]);
+      if (error) {
+        showStatus('Cloud save failed: ' + error.message, true);
+      }
+    }
+
+    async function deletePostFromCloud(postId) {
+      if (!sbClient) return;
+      const { error } = await sbClient.from('posts').delete().eq('id', postId);
+      if (error) {
+        showStatus('Cloud delete failed: ' + error.message, true);
+      }
+    }
+
+    async function connectSupabase(url, key) {
+      if (!url || !key || !window.supabase) {
+        sbClient = null;
+        updateCloudIndicator();
+        return;
+      }
+      try {
+        sbClient = window.supabase.createClient(url, key);
+        updateCloudIndicator();
+        await fetchRemotePosts();
+      } catch (err) {
+        sbClient = null;
+        updateCloudIndicator();
+        showStatus('Could not initialize Supabase client.', true);
+      }
+    }
+
+    // 5. Helper & Render Functions
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function getAuthorLabel() {
+      const trimmed = displayName.trim();
+      return trimmed ? trimmed + ' · ' + currentRole : currentRole;
+    }
+
+    function showStatus(msg, isError) {
+      statusToast.textContent = msg;
+      statusToast.className = isError
+        ? 'text-xs text-rose-600 font-medium'
+        : 'text-xs text-emerald-700 font-medium';
+    }
+
+    function renderRoleButtons() {
+      const activeClasses = 'bg-white text-indigo-700 shadow-sm';
+      const inactiveClasses = 'text-slate-600 hover:text-slate-900';
+
+      roleStudentBtn.className = 'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ' +
+        (currentRole === 'Student' ? activeClasses : inactiveClasses);
+      roleFacultyBtn.className = 'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ' +
+        (currentRole === 'Faculty' ? activeClasses : inactiveClasses);
+
+      lockFacultyBtn.classList.toggle('hidden', !facultyUnlocked);
+
+      const badgeClass = currentRole === 'Faculty'
+        ? 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700'
+        : 'text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700';
+
+      composerBadge.textContent = 'Posting as ' + getAuthorLabel();
+      composerBadge.className = badgeClass;
+      requestBadge.textContent = 'Submitting as ' + getAuthorLabel();
+      requestBadge.className = badgeClass;
+    }
+
+    function renderTabs() {
+      const activeTabCls = 'bg-slate-900 text-white';
+      const inactiveTabCls = 'bg-slate-100 text-slate-600 hover:text-slate-900';
+
+      tabFeedBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ' +
+        (activeTab === 'feed' ? activeTabCls : inactiveTabCls);
+      tabRequestsBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ' +
+        (activeTab === 'requests' ? activeTabCls : inactiveTabCls);
+
+      viewFeedEl.classList.toggle('hidden', activeTab !== 'feed');
+      viewRequestsEl.classList.toggle('hidden', activeTab !== 'requests');
+
+      const pendingCount = requests.filter((r) => r.status === 'Pending').length;
+      if (pendingCount > 0) {
+        pendingBadge.textContent = String(pendingCount);
+        pendingBadge.classList.remove('hidden');
+      } else {
+        pendingBadge.classList.add('hidden');
+      }
+    }
+
+    function renderChannels() {
+      const previousSelected = postChannel.value;
+      postChannel.innerHTML = channels
+        .map((ch) => '<option value="' + escapeHtml(ch) + '">' + escapeHtml(ch) + '</option>')
+        .join('');
+      if (channels.includes(previousSelected)) {
+        postChannel.value = previousSelected;
+      }
+
+      const filterItems = ['All', ...channels];
+      filterBar.innerHTML = filterItems
+        .map((ch) => {
+          const isActive = ch === activeFilter;
+          const classes = isActive
+            ? 'bg-slate-900 text-white'
+            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100';
+          return (
+            '<button type="button" data-filter="' + escapeHtml(ch) + '" ' +
+            'class="filter-btn px-3 py-1.5 rounded-full text-xs font-medium transition-colors ' + classes + '">' +
+              escapeHtml(ch) +
+            '</button>'
+          );
+        })
+        .join('');
+    }
+
+    function getVisiblePosts() {
+      const q = searchQuery.trim().toLowerCase();
+      return posts
+        .filter((p) => {
+          const matchesChannel = activeFilter === 'All' || p.channel === activeFilter;
+          if (!matchesChannel) return false;
+          if (!q) return true;
+          const inPost =
+            p.text.toLowerCase().includes(q) ||
+            p.channel.toLowerCase().includes(q) ||
+            (p.author || '').toLowerCase().includes(q);
+          const inReplies = p.replies.some(
+            (r) => r.text.toLowerCase().includes(q) || (r.author || '').toLowerCase().includes(q)
+          );
+          return inPost || inReplies;
+        })
+        .sort((a, b) => Number(b.pinned) - Number(a.pinned));
+    }
+
+    function renderFeed() {
+      const visiblePosts = getVisiblePosts();
+      postCount.textContent = visiblePosts.length + (visiblePosts.length === 1 ? ' post' : ' posts');
+
+      if (visiblePosts.length === 0) {
+        feedEl.innerHTML =
+          '<div class="bg-white border border-dashed border-slate-300 rounded-2xl p-8 text-center text-sm text-slate-500">' +
+          (searchQuery.trim() ? 'No posts match your search.' : 'No posts in this channel yet. Write the first one above!') +
+          '</div>';
+        return;
+      }
+
+      feedEl.innerHTML = visiblePosts.map((post) => {
+        const isFaculty = post.role === 'Faculty';
+        const roleBadge = isFaculty
+          ? 'bg-amber-50 text-amber-700 border border-amber-200'
+          : 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+
+        const cardBorder = post.pinned
+          ? 'border-amber-300 ring-1 ring-amber-100'
+          : 'border-slate-200';
+
+        const pinnedBadge = post.pinned
+          ? '<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Pinned</span>'
+          : '';
+
+        const resolvedBadge = post.resolved
+          ? '<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Resolved</span>'
+          : '';
+
+        const pinButton = currentRole === 'Faculty'
+          ? '<button type="button" class="pin-btn text-xs font-medium px-2.5 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors" data-post-id="' + post.id + '">' +
+              (post.pinned ? 'Unpin' : 'Pin') +
+            '</button>'
+          : '';
+
+        const resolveButton =
+          '<button type="button" class="resolve-btn text-xs font-medium px-2.5 py-1 rounded-lg border ' +
+          (post.resolved
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+            : 'border-slate-200 text-slate-600 hover:bg-slate-100') +
+          ' transition-colors" data-post-id="' + post.id + '">' +
+            (post.resolved ? 'Reopen' : 'Mark Resolved') +
+          '</button>';
+
+        const isConfirmingDelete = pendingDeleteId === post.id;
+        const deleteButton =
+          '<button type="button" class="delete-btn ml-auto text-xs font-medium px-2.5 py-1 rounded-lg border ' +
+          (isConfirmingDelete
+            ? 'border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100'
+            : 'border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200') +
+          ' transition-colors" data-post-id="' + post.id + '">' +
+            (isConfirmingDelete ? 'Confirm delete?' : 'Delete') +
+          '</button>';
+
+        const repliesHtml = post.replies.length > 0
+          ? '<div class="mt-3 pt-3 border-t border-slate-100 space-y-2">' +
+              post.replies.map((reply) => {
+                const replyBadge = reply.role === 'Faculty'
+                  ? 'bg-amber-50 text-amber-700'
+                  : 'bg-indigo-50 text-indigo-700';
+                return (
+                  '<div class="bg-slate-50 rounded-xl px-3 py-2 text-xs">' +
+                    '<div class="flex items-center justify-between gap-2 mb-1">' +
+                      '<span class="font-semibold px-2 py-0.5 rounded-full ' + replyBadge + '">' +
+                        escapeHtml(reply.author || reply.role) +
+                      '</span>' +
+                      '<span class="text-slate-400">' + escapeHtml(reply.time) + '</span>' +
+                    '</div>' +
+                    '<p class="text-slate-700 leading-relaxed">' + escapeHtml(reply.text) + '</p>' +
+                  '</div>'
+                );
+              }).join('') +
+            '</div>'
+          : '';
+
+        return (
+          '<article class="bg-white border ' + cardBorder + ' rounded-2xl p-4 sm:p-5 shadow-sm">' +
+            '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">' +
+              '<div class="flex flex-wrap items-center gap-2">' +
+                '<span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ' + roleBadge + '">' +
+                  escapeHtml(post.author || post.role) +
+                '</span>' +
+                '<span class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">' +
+                  escapeHtml(post.channel) +
+                '</span>' +
+                pinnedBadge +
+                resolvedBadge +
+              '</div>' +
+              '<span class="text-xs text-slate-400">' + escapeHtml(post.time) + '</span>' +
+            '</div>' +
+            '<p class="text-sm text-slate-800 leading-relaxed whitespace-pre-line">' +
+              escapeHtml(post.text) +
+            '</p>' +
+            '<div class="mt-3 flex flex-wrap items-center gap-2">' +
+              pinButton +
+              resolveButton +
+              deleteButton +
+            '</div>' +
+            repliesHtml +
+            '<form class="reply-form mt-3 pt-3 border-t border-slate-100 flex items-center gap-2" data-post-id="' + post.id + '">' +
+              '<input type="text" placeholder="Reply as ' + escapeHtml(getAuthorLabel()) + '..." ' +
+                'class="reply-input flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" />' +
+              '<button type="submit" ' +
+                'class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition-colors">' +
+                'Reply' +
+              '</button>' +
+            '</form>' +
+          '</article>'
+        );
+      }).join('');
+    }
+
+    function renderRequests() {
+      requestCount.textContent = requests.length + (requests.length === 1 ? ' request' : ' requests');
+
+      if (requests.length === 0) {
+        requestsList.innerHTML =
+          '<div class="bg-white border border-dashed border-slate-300 rounded-2xl p-8 text-center text-sm text-slate-500">' +
+          'No office-hours or leave requests yet.' +
+          '</div>';
+        return;
+      }
+
+      requestsList.innerHTML = requests.map((req) => {
+        const statusStyles = req.status === 'Approved'
+          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+          : req.status === 'Declined'
+            ? 'bg-rose-50 text-rose-700 border border-rose-200'
+            : 'bg-amber-50 text-amber-700 border border-amber-200';
+
+        const facultyActions = currentRole === 'Faculty'
+          ? '<div class="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">' +
+              '<button type="button" class="req-approve px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition-colors" data-req-id="' + req.id + '">Approve</button>' +
+              '<button type="button" class="req-decline px-3 py-1 rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-medium transition-colors" data-req-id="' + req.id + '">Decline</button>' +
+            '</div>'
+          : '';
+
+        return (
+          '<article class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">' +
+            '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">' +
+              '<div class="flex flex-wrap items-center gap-2">' +
+                '<span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700">' +
+                  escapeHtml(req.author) +
+                '</span>' +
+                '<span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">' +
+                  escapeHtml(req.type) +
+                '</span>' +
+                '<span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ' + statusStyles + '">' +
+                  escapeHtml(req.status) +
+                '</span>' +
+              '</div>' +
+              '<span class="text-xs font-medium text-slate-500">' + escapeHtml(req.when) + '</span>' +
+            '</div>' +
+            '<p class="text-sm text-slate-800 leading-relaxed">' + escapeHtml(req.reason) + '</p>' +
+            facultyActions +
+          '</article>'
+        );
+      }).join('');
+    }
+
+    // 6. Event Listeners
+    cloudToggleBtn.addEventListener('click', () => {
+      cloudPanel.classList.toggle('hidden');
+    });
+
+    cloudCloseBtn.addEventListener('click', () => {
+      cloudPanel.classList.add('hidden');
+    });
+
+    cloudForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = sbUrlInput.value.trim();
+      const key = sbKeyInput.value.trim();
+      if (!url || !key) {
+        showStatus('Please enter both your Supabase Project URL and anon key.', true);
+        return;
+      }
+      cloudConfig = { url, key };
+      saveCloudConfig(url, key);
+      await connectSupabase(url, key);
+    });
+
+    cloudRefreshBtn.addEventListener('click', () => {
+      fetchRemotePosts();
+    });
+
+    cloudDisconnectBtn.addEventListener('click', () => {
+      sbClient = null;
+      cloudConfig = { url: '', key: '' };
+      sbUrlInput.value = '';
+      sbKeyInput.value = '';
+      saveCloudConfig('', '');
+      updateCloudIndicator();
+      posts = loadPosts();
+      renderFeed();
+      showStatus('Switched back to local browser mode.', false);
+    });
+
+    displayNameInput.addEventListener('input', () => {
+      displayName = displayNameInput.value;
+      saveName(displayName);
+      renderRoleButtons();
+      renderFeed();
+    });
+
+    roleStudentBtn.addEventListener('click', () => {
+      currentRole = 'Student';
+      pendingDeleteId = null;
+      facultyGate.classList.add('hidden');
+      renderRoleButtons();
+      renderFeed();
+      renderRequests();
+    });
+
+    roleFacultyBtn.addEventListener('click', () => {
+      if (facultyUnlocked) {
+        currentRole = 'Faculty';
+        pendingDeleteId = null;
+        renderRoleButtons();
+        renderFeed();
+        renderRequests();
+      } else {
+        facultyPassError.classList.add('hidden');
+        facultyPassInput.value = '';
+        facultyGate.classList.remove('hidden');
+        facultyPassInput.focus();
+      }
+    });
+
+    facultyPassForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (facultyPassInput.value === FACULTY_PASSCODE) {
+        facultyUnlocked = true;
+        currentRole = 'Faculty';
+        facultyGate.classList.add('hidden');
+        facultyPassError.classList.add('hidden');
+        renderRoleButtons();
+        renderFeed();
+        renderRequests();
+        showStatus('Faculty mode unlocked for this session.', false);
+      } else {
+        facultyPassError.classList.remove('hidden');
+      }
+    });
+
+    facultyCancelBtn.addEventListener('click', () => {
+      facultyGate.classList.add('hidden');
+      facultyPassError.classList.add('hidden');
+    });
+
+    lockFacultyBtn.addEventListener('click', () => {
+      facultyUnlocked = false;
+      currentRole = 'Student';
+      facultyGate.classList.add('hidden');
+      renderRoleButtons();
+      renderFeed();
+      renderRequests();
+      showStatus('Faculty mode locked.', false);
+    });
+
+    tabFeedBtn.addEventListener('click', () => {
+      activeTab = 'feed';
+      renderTabs();
+    });
+
+    tabRequestsBtn.addEventListener('click', () => {
+      activeTab = 'requests';
+      renderTabs();
+    });
+
+    exportBtn.addEventListener('click', () => {
+      const payload = JSON.stringify({ channels, posts, requests }, null, 2);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'unisphere-backup.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showStatus('Exported unisphere-backup.json', false);
+    });
+
+    importBtn.addEventListener('click', () => {
+      importFileInput.click();
+    });
+
+    importFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(String(reader.result));
+          if (!data || !Array.isArray(data.posts)) {
+            showStatus('Invalid backup file: missing posts list.', true);
+            return;
+          }
+          if (Array.isArray(data.channels) && data.channels.length > 0) {
+            channels = data.channels.map(String);
+            saveChannels();
+          }
+          posts = data.posts.map((p) => ({
+            ...p,
+            author: p.author || p.role || 'Member',
+            pinned: Boolean(p.pinned),
+            resolved: Boolean(p.resolved),
+            replies: Array.isArray(p.replies) ? p.replies : []
+          }));
+          if (Array.isArray(data.requests)) {
+            requests = data.requests;
+            saveRequests();
+          }
+          savePostsLocal();
+          activeFilter = 'All';
+          renderChannels();
+          renderFeed();
+          renderRequests();
+          renderTabs();
+          showStatus('Imported ' + posts.length + ' posts successfully.', false);
+        } catch (err) {
+          showStatus('Could not read JSON file.', true);
+        }
+      };
+      reader.readAsText(file);
+      importFileInput.value = '';
+    });
+
+    searchInput.addEventListener('input', () => {
+      searchQuery = searchInput.value;
+      renderFeed();
+    });
+
+    channelForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = newChannelInput.value.trim();
+      if (!name) return;
+
+      const exists = channels.some((c) => c.toLowerCase() === name.toLowerCase());
+      if (!exists) {
+        channels.push(name);
+        saveChannels();
+      }
+
+      const matched = channels.find((c) => c.toLowerCase() === name.toLowerCase()) || name;
+      activeFilter = matched;
+      newChannelInput.value = '';
+      renderChannels();
+      postChannel.value = matched;
+      renderFeed();
+    });
+
+    filterBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      activeFilter = btn.dataset.filter;
+      pendingDeleteId = null;
+      renderChannels();
+      renderFeed();
+    });
+
+    postForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = postText.value.trim();
+      if (!text) {
+        formError.classList.remove('hidden');
+        return;
+      }
+      formError.classList.add('hidden');
+
+      const newPost = {
+        id: Date.now(),
+        role: currentRole,
+        author: getAuthorLabel(),
+        channel: postChannel.value,
+        text: text,
+        time: 'Just now',
+        pinned: false,
+        resolved: false,
+        replies: []
+      };
+
+      posts.unshift(newPost);
+      pendingDeleteId = null;
+      savePostsLocal();
+      postText.value = '';
+      renderFeed();
+      await syncPostToCloud(newPost);
+    });
+
+    postText.addEventListener('input', () => {
+      if (postText.value.trim()) {
+        formError.classList.add('hidden');
+      }
+    });
+
+    feedEl.addEventListener('click', async (e) => {
+      const pinBtn = e.target.closest('.pin-btn');
+      if (pinBtn && currentRole === 'Faculty') {
+        const postId = Number(pinBtn.dataset.postId);
+        const target = posts.find((p) => p.id === postId);
+        if (target) {
+          target.pinned = !target.pinned;
+          pendingDeleteId = null;
+          savePostsLocal();
+          renderFeed();
+          await syncPostToCloud(target);
+        }
+        return;
+      }
+
+      const resolveBtn = e.target.closest('.resolve-btn');
+      if (resolveBtn) {
+        const postId = Number(resolveBtn.dataset.postId);
+        const target = posts.find((p) => p.id === postId);
+        if (target) {
+          target.resolved = !target.resolved;
+          pendingDeleteId = null;
+          savePostsLocal();
+          renderFeed();
+          await syncPostToCloud(target);
+        }
+        return;
+      }
+
+      const deleteBtn = e.target.closest('.delete-btn');
+      if (deleteBtn) {
+        const postId = Number(deleteBtn.dataset.postId);
+        if (pendingDeleteId === postId) {
+          posts = posts.filter((p) => p.id !== postId);
+          pendingDeleteId = null;
+          savePostsLocal();
+          renderFeed();
+          await deletePostFromCloud(postId);
+        } else {
+          pendingDeleteId = postId;
+          renderFeed();
+        }
+      }
+    });
+
+    feedEl.addEventListener('submit', async (e) => {
+      const form = e.target.closest('.reply-form');
+      if (!form) return;
+      e.preventDefault();
+
+      const input = form.querySelector('.reply-input');
+      const replyText = input.value.trim();
+      if (!replyText) return;
+
+      const postId = Number(form.dataset.postId);
+      const targetPost = posts.find((p) => p.id === postId);
+      if (!targetPost) return;
+
+      targetPost.replies.push({
+        id: Date.now(),
+        role: currentRole,
+        author: getAuthorLabel(),
+        text: replyText,
+        time: 'Just now'
+      });
+
+      pendingDeleteId = null;
+      savePostsLocal();
+      renderFeed();
+      await syncPostToCloud(targetPost);
+    });
+
+    requestForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const when = requestWhen.value.trim();
+      const reason = requestReason.value.trim();
+      if (!when || !reason) {
+        requestError.classList.remove('hidden');
+        return;
+      }
+      requestError.classList.add('hidden');
+
+      requests.unshift({
+        id: Date.now(),
+        author: getAuthorLabel(),
+        type: requestType.value,
+        when: when,
+        reason: reason,
+        status: 'Pending'
+      });
+
+      saveRequests();
+      requestWhen.value = '';
+      requestReason.value = '';
+      renderRequests();
+      renderTabs();
+    });
+
+    requestsList.addEventListener('click', (e) => {
+      if (currentRole !== 'Faculty') return;
+      const approveBtn = e.target.closest('.req-approve');
+      const declineBtn = e.target.closest('.req-decline');
+      const btn = approveBtn || declineBtn;
+      if (!btn) return;
+
+      const reqId = Number(btn.dataset.reqId);
+      const target = requests.find((r) => r.id === reqId);
+      if (!target) return;
+
+      target.status = approveBtn ? 'Approved' : 'Declined';
+      saveRequests();
+      renderRequests();
+      renderTabs();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      posts = structuredClone(DEFAULT_POSTS);
+      channels = [...DEFAULT_CHANNELS];
+      requests = structuredClone(DEFAULT_REQUESTS);
+      savePostsLocal();
+      saveChannels();
+      saveRequests();
+      activeFilter = 'All';
+      searchQuery = '';
+      pendingDeleteId = null;
+      searchInput.value = '';
+      renderChannels();
+      renderFeed();
+      renderRequests();
+      renderTabs();
+      showStatus('Restored starter demo data.', false);
+    });
+
+    // 7. Initial Render & Optional Cloud Connect
+    renderRoleButtons();
+    renderTabs();
+    renderChannels();
+    renderFeed();
+    renderRequests();
+    updateCloudIndicator();
+
+    if (cloudConfig.url && cloudConfig.key) {
+      connectSupabase(cloudConfig.url, cloudConfig.key);
+    }
+  </script>
+</body>
+</html>
