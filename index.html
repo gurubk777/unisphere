@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Unisphere — Campus Portal (v8)</title>
+  <title>Unisphere — Campus Portal</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,7 +14,115 @@
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
-  <div class="max-w-3xl mx-auto px-4 py-6 sm:py-8">
+
+  <!-- SCREEN 1: Dedicated Login / Sign Up Screen -->
+  <main id="login-screen" class="min-h-screen flex items-center justify-center px-4 py-10">
+    <div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-sm">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-sm">
+          U
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-slate-900">Unisphere</h1>
+          <p class="text-xs text-slate-500">Sign in to your campus portal</p>
+        </div>
+      </div>
+
+      <div id="login-cloud-warning" class="hidden mb-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900">
+        Supabase keys are not configured yet. Connect your project below, or use <strong>Local Demo Mode</strong>.
+      </div>
+
+      <form id="auth-form" class="space-y-3">
+        <div>
+          <label for="auth-username-input" class="block text-xs font-medium text-slate-700 mb-1">Username</label>
+          <input
+            type="text"
+            id="auth-username-input"
+            placeholder="e.g. guruprasad (used on your posts)"
+            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+          />
+        </div>
+        <div>
+          <label for="auth-email-input" class="block text-xs font-medium text-slate-700 mb-1">Email</label>
+          <input
+            type="email"
+            id="auth-email-input"
+            placeholder="you@university.edu"
+            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+          />
+        </div>
+        <div>
+          <label for="auth-password-input" class="block text-xs font-medium text-slate-700 mb-1">Password</label>
+          <input
+            type="password"
+            id="auth-password-input"
+            placeholder="At least 6 characters"
+            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+          />
+        </div>
+
+        <div id="auth-feedback" class="hidden text-xs font-medium text-indigo-700"></div>
+
+        <div class="flex flex-col sm:flex-row gap-2 pt-1">
+          <button
+            type="submit"
+            class="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors shadow-sm"
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            id="sign-up-btn"
+            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-sm font-semibold transition-colors"
+          >
+            Create Account
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-5 pt-4 border-t border-slate-100 flex flex-col gap-2">
+        <button
+          type="button"
+          id="guest-demo-btn"
+          class="w-full px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition-colors"
+        >
+          Continue in Local Demo Mode
+        </button>
+
+        <button
+          type="button"
+          id="login-cloud-toggle"
+          class="text-xs text-slate-400 hover:text-slate-700 underline underline-offset-2 self-center mt-1"
+        >
+          Configure Supabase URL &amp; Key
+        </button>
+
+        <form id="login-cloud-form" class="hidden mt-2 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <input
+            type="url"
+            id="login-sb-url"
+            placeholder="https://your-project.supabase.co"
+            class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900"
+          />
+          <input
+            type="text"
+            id="login-sb-key"
+            placeholder="Paste Supabase anon public key"
+            class="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900"
+          />
+          <button
+            type="submit"
+            class="w-full px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium"
+          >
+            Save &amp; Connect
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- SCREEN 2: Main Portal App -->
+  <div id="app-shell" class="hidden max-w-3xl mx-auto px-4 py-6 sm:py-8">
     <!-- Part 1: Header, Display Name, Role Switcher & Navigation Tabs -->
     <header class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm mb-5">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -24,7 +132,7 @@
           </div>
           <div>
             <h1 class="text-xl font-bold tracking-tight text-slate-900">Unisphere</h1>
-            <p class="text-xs text-slate-500">Zero-cost student &amp; faculty portal · Step 8 (Faculty Passcode)</p>
+            <p class="text-xs text-slate-500" id="account-subtitle">Zero-cost student &amp; faculty portal</p>
           </div>
         </div>
 
@@ -33,7 +141,7 @@
             type="text"
             id="display-name"
             placeholder="Your name (optional)"
-            class="w-40 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+            class="w-36 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
           />
           <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl" role="group" aria-label="Switch role">
             <button
@@ -92,7 +200,7 @@
         </form>
       </div>
 
-      <!-- Tabs + Cloud Sync + Export/Import Bar -->
+      <!-- Tabs + Cloud Sync + Export/Import + Sign Out Bar -->
       <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-1.5" role="tablist" aria-label="Portal sections">
           <button
@@ -135,6 +243,13 @@
           >
             Import JSON
           </button>
+          <button
+            type="button"
+            id="sign-out-btn"
+            class="px-2.5 py-1 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-xs font-medium text-rose-600 transition-colors"
+          >
+            Sign Out
+          </button>
           <input type="file" id="import-file" accept=".json,application/json" class="hidden" />
         </div>
       </div>
@@ -142,7 +257,7 @@
       <!-- Collapsible Cloud Sync Panel -->
       <div id="cloud-panel" class="hidden mt-3 pt-3 border-t border-slate-100 bg-slate-50 rounded-xl p-3">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold text-slate-700">Connect Supabase (optional — syncs Course Feed across devices)</span>
+          <span class="text-xs font-semibold text-slate-700">Connect Supabase (syncs Feed &amp; Requests in real time)</span>
           <button type="button" id="cloud-close-btn" class="text-xs text-slate-400 hover:text-slate-700">Close</button>
         </div>
         <form id="cloud-form" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
@@ -170,7 +285,7 @@
               id="cloud-refresh-btn"
               class="hidden px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-medium text-slate-700 transition-colors"
             >
-              Refresh Feed
+              Refresh Now
             </button>
             <button
               type="button"
@@ -341,19 +456,19 @@
   </div>
 
   <script>
-    // Optional: change this demo passcode before sharing, or upgrade to Supabase Auth later
+    // Optional: change this demo passcode before sharing
     const FACULTY_PASSCODE = 'faculty123';
 
     // Optional: paste your Supabase keys directly here when hosting online
-    const DEFAULT_SUPABASE_URL = '';
-    const DEFAULT_SUPABASE_ANON_KEY = '';
+    const DEFAULT_SUPABASE_URL = 'https://kklaxeeqhtijjkoiyxxi.supabase.co';
+    const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrbGF4ZWVxaHRpamprb2l5eHhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0OTg3MzksImV4cCI6MjExMDA3NDczOX0.aeqIwVEd_ZR-n7pxu_WnBd0xHEXLB2ffdaKvVqTeFiU';
 
     // 1. Starter Data & Storage Helpers
-    const POSTS_STORAGE_KEY = 'unisphere_posts_v8';
-    const CHANNELS_STORAGE_KEY = 'unisphere_channels_v8';
-    const REQUESTS_STORAGE_KEY = 'unisphere_requests_v8';
-    const NAME_STORAGE_KEY = 'unisphere_name_v8';
-    const CLOUD_CFG_STORAGE_KEY = 'unisphere_cloud_cfg_v8';
+    const POSTS_STORAGE_KEY = 'unisphere_posts_v11';
+    const CHANNELS_STORAGE_KEY = 'unisphere_channels_v11';
+    const REQUESTS_STORAGE_KEY = 'unisphere_requests_v11';
+    const NAME_STORAGE_KEY = 'unisphere_name_v11';
+    const CLOUD_CFG_STORAGE_KEY = 'unisphere_cloud_cfg_v11';
 
     const DEFAULT_CHANNELS = [
       'Systems & Compilers',
@@ -418,7 +533,7 @@
 
     function loadChannels() {
       try {
-        const raw = localStorage.getItem(CHANNELS_STORAGE_KEY) || localStorage.getItem('unisphere_channels_v7');
+        const raw = localStorage.getItem(CHANNELS_STORAGE_KEY) || localStorage.getItem('unisphere_channels_v10');
         if (!raw) return [...DEFAULT_CHANNELS];
         const parsed = JSON.parse(raw);
         return Array.isArray(parsed) && parsed.length > 0 ? parsed : [...DEFAULT_CHANNELS];
@@ -435,7 +550,7 @@
 
     function loadPosts() {
       try {
-        const raw = localStorage.getItem(POSTS_STORAGE_KEY) || localStorage.getItem('unisphere_posts_v7');
+        const raw = localStorage.getItem(POSTS_STORAGE_KEY) || localStorage.getItem('unisphere_posts_v10');
         if (!raw) return structuredClone(DEFAULT_POSTS);
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return structuredClone(DEFAULT_POSTS);
@@ -461,7 +576,7 @@
 
     function loadRequests() {
       try {
-        const raw = localStorage.getItem(REQUESTS_STORAGE_KEY) || localStorage.getItem('unisphere_requests_v7');
+        const raw = localStorage.getItem(REQUESTS_STORAGE_KEY) || localStorage.getItem('unisphere_requests_v10');
         if (!raw) return structuredClone(DEFAULT_REQUESTS);
         const parsed = JSON.parse(raw);
         return Array.isArray(parsed) ? parsed : structuredClone(DEFAULT_REQUESTS);
@@ -470,7 +585,7 @@
       }
     }
 
-    function saveRequests() {
+    function saveRequestsLocal() {
       try {
         localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(requests));
       } catch (err) {}
@@ -478,7 +593,7 @@
 
     function loadName() {
       try {
-        return localStorage.getItem(NAME_STORAGE_KEY) || localStorage.getItem('unisphere_name_v7') || '';
+        return localStorage.getItem(NAME_STORAGE_KEY) || localStorage.getItem('unisphere_name_v10') || '';
       } catch (err) {
         return '';
       }
@@ -495,7 +610,7 @@
         return { url: DEFAULT_SUPABASE_URL, key: DEFAULT_SUPABASE_ANON_KEY };
       }
       try {
-        const raw = localStorage.getItem(CLOUD_CFG_STORAGE_KEY) || localStorage.getItem('unisphere_cloud_cfg_v7');
+        const raw = localStorage.getItem(CLOUD_CFG_STORAGE_KEY) || localStorage.getItem('unisphere_cloud_cfg_v10');
         if (!raw) return { url: '', key: '' };
         const parsed = JSON.parse(raw);
         return { url: parsed.url || '', key: parsed.key || '' };
@@ -523,8 +638,27 @@
     let requests = loadRequests();
     let cloudConfig = loadCloudConfig();
     let sbClient = null;
+    let realtimeChannel = null;
+    let currentUser = null;
+    let guestMode = false;
 
     // 3. DOM References
+    const loginScreen = document.getElementById('login-screen');
+    const appShell = document.getElementById('app-shell');
+    const loginCloudWarning = document.getElementById('login-cloud-warning');
+    const authForm = document.getElementById('auth-form');
+    const authUsernameInput = document.getElementById('auth-username-input');
+    const authEmailInput = document.getElementById('auth-email-input');
+    const authPasswordInput = document.getElementById('auth-password-input');
+    const signUpBtn = document.getElementById('sign-up-btn');
+    const authFeedback = document.getElementById('auth-feedback');
+    const guestDemoBtn = document.getElementById('guest-demo-btn');
+    const loginCloudToggle = document.getElementById('login-cloud-toggle');
+    const loginCloudForm = document.getElementById('login-cloud-form');
+    const loginSbUrl = document.getElementById('login-sb-url');
+    const loginSbKey = document.getElementById('login-sb-key');
+
+    const accountSubtitle = document.getElementById('account-subtitle');
     const displayNameInput = document.getElementById('display-name');
     const roleStudentBtn = document.getElementById('role-student');
     const roleFacultyBtn = document.getElementById('role-faculty');
@@ -542,6 +676,7 @@
     const composerBadge = document.getElementById('composer-badge');
     const requestBadge = document.getElementById('request-badge');
     const statusToast = document.getElementById('status-toast');
+    const signOutBtn = document.getElementById('sign-out-btn');
     const cloudToggleBtn = document.getElementById('cloud-toggle-btn');
     const cloudDot = document.getElementById('cloud-dot');
     const cloudPanel = document.getElementById('cloud-panel');
@@ -575,10 +710,38 @@
     const requestsList = document.getElementById('requests-list');
 
     displayNameInput.value = displayName;
+    authUsernameInput.value = displayName;
     sbUrlInput.value = cloudConfig.url;
     sbKeyInput.value = cloudConfig.key;
+    loginSbUrl.value = cloudConfig.url;
+    loginSbKey.value = cloudConfig.key;
 
-    // 4. Cloud Sync Helpers (Supabase)
+    // 4. Screen & Auth Helpers
+    function showAuthFeedback(msg, isError) {
+      authFeedback.textContent = msg;
+      authFeedback.classList.remove('hidden');
+      authFeedback.className = isError
+        ? 'text-xs font-medium text-rose-600'
+        : 'text-xs font-medium text-emerald-700';
+    }
+
+    function updateScreenVisibility() {
+      const hasCloud = Boolean(sbClient);
+      loginCloudWarning.classList.toggle('hidden', hasCloud);
+
+      const enterPortal = Boolean(currentUser) || guestMode;
+      loginScreen.classList.toggle('hidden', enterPortal);
+      appShell.classList.toggle('hidden', !enterPortal);
+
+      if (currentUser && currentUser.email) {
+        accountSubtitle.textContent = 'Signed in as ' + currentUser.email;
+        signOutBtn.textContent = 'Sign Out';
+      } else {
+        accountSubtitle.textContent = 'Local Demo Mode · Unisphere';
+        signOutBtn.textContent = 'Back to Login';
+      }
+    }
+
     function updateCloudIndicator() {
       const connected = Boolean(sbClient);
       cloudDot.className = connected
@@ -586,6 +749,7 @@
         : 'w-2 h-2 rounded-full bg-slate-300';
       cloudRefreshBtn.classList.toggle('hidden', !connected);
       cloudDisconnectBtn.classList.toggle('hidden', !connected);
+      updateScreenVisibility();
     }
 
     async function fetchRemotePosts() {
@@ -610,7 +774,24 @@
         }));
         savePostsLocal();
         renderFeed();
-        showStatus('Synced ' + posts.length + ' posts from Supabase.', false);
+        showStatus('Live sync active (' + posts.length + ' posts).', false);
+      }
+    }
+
+    async function fetchRemoteRequests() {
+      if (!sbClient) return;
+      const { data, error } = await sbClient
+        .from('requests')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) return;
+
+      if (Array.isArray(data)) {
+        requests = data;
+        saveRequestsLocal();
+        renderRequests();
+        renderTabs();
       }
     }
 
@@ -630,18 +811,59 @@
       }
     }
 
+    async function syncRequestToCloud(req) {
+      if (!sbClient) return;
+      await sbClient.from('requests').upsert([req]);
+    }
+
+    function unsubscribeRealtime() {
+      if (sbClient && realtimeChannel) {
+        sbClient.removeChannel(realtimeChannel);
+        realtimeChannel = null;
+      }
+    }
+
+    function subscribeRealtime() {
+      if (!sbClient) return;
+      unsubscribeRealtime();
+      realtimeChannel = sbClient
+        .channel('unisphere-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
+          fetchRemotePosts();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, () => {
+          fetchRemoteRequests();
+        })
+        .subscribe();
+    }
+
     async function connectSupabase(url, key) {
       if (!url || !key || !window.supabase) {
+        unsubscribeRealtime();
         sbClient = null;
+        currentUser = null;
         updateCloudIndicator();
         return;
       }
       try {
         sbClient = window.supabase.createClient(url, key);
+        const { data } = await sbClient.auth.getSession();
+        currentUser = data && data.session ? data.session.user : null;
+
+        sbClient.auth.onAuthStateChange((_event, session) => {
+          currentUser = session ? session.user : null;
+          updateScreenVisibility();
+          renderRoleButtons();
+        });
+
         updateCloudIndicator();
+        renderRoleButtons();
         await fetchRemotePosts();
+        await fetchRemoteRequests();
+        subscribeRealtime();
       } catch (err) {
         sbClient = null;
+        currentUser = null;
         updateCloudIndicator();
         showStatus('Could not initialize Supabase client.', true);
       }
@@ -656,7 +878,14 @@
 
     function getAuthorLabel() {
       const trimmed = displayName.trim();
-      return trimmed ? trimmed + ' · ' + currentRole : currentRole;
+      if (trimmed) return trimmed + ' · ' + currentRole;
+      const metaName = currentUser && currentUser.user_metadata && currentUser.user_metadata.username;
+      if (metaName) return metaName + ' · ' + currentRole;
+      if (currentUser && currentUser.email) {
+        const handle = currentUser.email.split('@')[0];
+        return handle + ' · ' + currentRole;
+      }
+      return currentRole;
     }
 
     function showStatus(msg, isError) {
@@ -915,6 +1144,104 @@
     }
 
     // 6. Event Listeners
+    loginCloudToggle.addEventListener('click', () => {
+      loginCloudForm.classList.toggle('hidden');
+    });
+
+    loginCloudForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = loginSbUrl.value.trim();
+      const key = loginSbKey.value.trim();
+      if (!url || !key) {
+        showAuthFeedback('Enter both Supabase Project URL and anon key.', true);
+        return;
+      }
+      cloudConfig = { url, key };
+      sbUrlInput.value = url;
+      sbKeyInput.value = key;
+      saveCloudConfig(url, key);
+      await connectSupabase(url, key);
+      loginCloudForm.classList.add('hidden');
+      showAuthFeedback('Connected to Supabase! You can now sign in or create an account.', false);
+    });
+
+    guestDemoBtn.addEventListener('click', () => {
+      guestMode = true;
+      updateScreenVisibility();
+    });
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!sbClient) {
+        showAuthFeedback('Connect Supabase first, or click Continue in Local Demo Mode.', true);
+        return;
+      }
+      const username = authUsernameInput.value.trim();
+      const email = authEmailInput.value.trim();
+      const password = authPasswordInput.value;
+      if (!email || !password) {
+        showAuthFeedback('Enter both email and password.', true);
+        return;
+      }
+      if (username) {
+        displayName = username;
+        displayNameInput.value = username;
+        saveName(username);
+      }
+      showAuthFeedback('Signing in...', false);
+      const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+      if (error) {
+        showAuthFeedback(error.message, true);
+      } else {
+        if (!username && data && data.user && data.user.user_metadata && data.user.user_metadata.username) {
+          displayName = data.user.user_metadata.username;
+          displayNameInput.value = displayName;
+          saveName(displayName);
+        }
+        authFeedback.classList.add('hidden');
+        authPasswordInput.value = '';
+      }
+    });
+
+    signUpBtn.addEventListener('click', async () => {
+      if (!sbClient) {
+        showAuthFeedback('Connect Supabase first, or click Continue in Local Demo Mode.', true);
+        return;
+      }
+      const username = authUsernameInput.value.trim();
+      const email = authEmailInput.value.trim();
+      const password = authPasswordInput.value;
+      if (!username || !email || password.length < 6) {
+        showAuthFeedback('Enter a username, valid email, and at least 6-character password.', true);
+        return;
+      }
+      displayName = username;
+      displayNameInput.value = username;
+      saveName(username);
+      showAuthFeedback('Creating account...', false);
+      const { data, error } = await sbClient.auth.signUp({
+        email,
+        password,
+        options: { data: { username } }
+      });
+      if (error) {
+        showAuthFeedback(error.message, true);
+      } else if (data && !data.session) {
+        showAuthFeedback('Check your email inbox to confirm your account!', false);
+      } else {
+        authFeedback.classList.add('hidden');
+      }
+    });
+
+    signOutBtn.addEventListener('click', async () => {
+      guestMode = false;
+      if (sbClient && currentUser) {
+        await sbClient.auth.signOut();
+      }
+      currentUser = null;
+      updateScreenVisibility();
+    });
+
     cloudToggleBtn.addEventListener('click', () => {
       cloudPanel.classList.toggle('hidden');
     });
@@ -932,23 +1259,34 @@
         return;
       }
       cloudConfig = { url, key };
+      loginSbUrl.value = url;
+      loginSbKey.value = key;
       saveCloudConfig(url, key);
       await connectSupabase(url, key);
     });
 
     cloudRefreshBtn.addEventListener('click', () => {
       fetchRemotePosts();
+      fetchRemoteRequests();
     });
 
     cloudDisconnectBtn.addEventListener('click', () => {
+      unsubscribeRealtime();
       sbClient = null;
+      currentUser = null;
       cloudConfig = { url: '', key: '' };
       sbUrlInput.value = '';
       sbKeyInput.value = '';
+      loginSbUrl.value = '';
+      loginSbKey.value = '';
       saveCloudConfig('', '');
       updateCloudIndicator();
       posts = loadPosts();
+      requests = loadRequests();
+      renderRoleButtons();
       renderFeed();
+      renderRequests();
+      renderTabs();
       showStatus('Switched back to local browser mode.', false);
     });
 
@@ -1066,7 +1404,7 @@
           }));
           if (Array.isArray(data.requests)) {
             requests = data.requests;
-            saveRequests();
+            saveRequestsLocal();
           }
           savePostsLocal();
           activeFilter = 'All';
@@ -1223,7 +1561,7 @@
       await syncPostToCloud(targetPost);
     });
 
-    requestForm.addEventListener('submit', (e) => {
+    requestForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const when = requestWhen.value.trim();
       const reason = requestReason.value.trim();
@@ -1233,23 +1571,25 @@
       }
       requestError.classList.add('hidden');
 
-      requests.unshift({
+      const newReq = {
         id: Date.now(),
         author: getAuthorLabel(),
         type: requestType.value,
         when: when,
         reason: reason,
         status: 'Pending'
-      });
+      };
 
-      saveRequests();
+      requests.unshift(newReq);
+      saveRequestsLocal();
       requestWhen.value = '';
       requestReason.value = '';
       renderRequests();
       renderTabs();
+      await syncRequestToCloud(newReq);
     });
 
-    requestsList.addEventListener('click', (e) => {
+    requestsList.addEventListener('click', async (e) => {
       if (currentRole !== 'Faculty') return;
       const approveBtn = e.target.closest('.req-approve');
       const declineBtn = e.target.closest('.req-decline');
@@ -1261,9 +1601,10 @@
       if (!target) return;
 
       target.status = approveBtn ? 'Approved' : 'Declined';
-      saveRequests();
+      saveRequestsLocal();
       renderRequests();
       renderTabs();
+      await syncRequestToCloud(target);
     });
 
     resetBtn.addEventListener('click', () => {
@@ -1272,7 +1613,7 @@
       requests = structuredClone(DEFAULT_REQUESTS);
       savePostsLocal();
       saveChannels();
-      saveRequests();
+      saveRequestsLocal();
       activeFilter = 'All';
       searchQuery = '';
       pendingDeleteId = null;
