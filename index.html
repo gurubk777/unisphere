@@ -65,8 +65,20 @@
       color: #f1f5f9 !important;
     }
     body.dark-mode .bg-slate-50,
-    body.dark-mode .bg-slate-100 {
+    body.dark-mode .bg-slate-50\/50,
+    body.dark-mode .bg-slate-50\/60,
+    body.dark-mode .bg-slate-100,
+    body.dark-mode .bg-slate-100\/80,
+    body.dark-mode .bg-slate-200\/70 {
       background-color: #1e293b !important;
+    }
+    body.dark-mode #chat-thread-pane {
+      background-color: #0f172a !important;
+    }
+    body.dark-mode #chat-active-avatar,
+    body.dark-mode #chat-contacts-list .rounded-full.bg-slate-200\/70 {
+      background-color: #335c81 !important;
+      color: #f8fafc !important;
     }
     body.dark-mode .bg-slate-100/80,
     body.dark-mode .bg-slate-100/80\/70,
@@ -392,9 +404,24 @@
     <div class="flex-1 flex flex-col min-h-screen pb-20 md:pb-8">
       <!-- Forest Green University Banner Header (Matches Screenshot) -->
       <header class="bg-gradient-to-br from-[#1e293b] via-[#2b4566] to-[#335c81] text-white rounded-b-3xl shadow-md">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 pt-4 pb-5">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 pt-3 pb-4 md:pt-4 md:pb-5">
+          <!-- Compact Mobile Sub-Page Header (Shown ONLY on <md when activeTab !== 'home') -->
+          <div id="mobile-subpage-bar" class="hidden md:hidden flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <button type="button" id="mobile-subpage-back" class="p-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold flex-shrink-0" aria-label="Back to Home">
+                ←
+              </button>
+              <h2 id="mobile-subpage-title" class="text-sm font-bold text-white truncate">Section</h2>
+            </div>
+            <button type="button" id="mobile-subpage-menu" class="p-2 rounded-xl bg-white/15 hover:bg-white/25 text-white flex-shrink-0" aria-label="Open menu">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+
           <!-- Top Bar: Sidebar Toggle, Crest, College Title & Role Switcher -->
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div id="header-top-bar" class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div class="flex items-center gap-3">
               <button
                 type="button"
@@ -418,7 +445,7 @@
               </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
+            <div id="header-controls-bar" class="flex flex-wrap items-center gap-2">
               <input
                 type="text"
                 id="display-name"
@@ -442,7 +469,7 @@
           </div>
 
           <!-- Student Identity Card Inside Green Banner (Matches Screenshot) -->
-          <div class="bg-white/15 border border-white/15 rounded-2xl px-4 py-3.5 flex items-center justify-between gap-4">
+          <div id="hero-identity-card" class="bg-white/15 border border-white/15 rounded-2xl px-4 py-3.5 flex items-center justify-between gap-4">
             <div>
               <h3 class="text-base sm:text-lg font-extrabold tracking-tight uppercase text-white" id="hero-student-name">
                 GURUPRASAD
@@ -522,7 +549,7 @@
       </header>
 
       <div class="max-w-4xl mx-auto w-full px-4 sm:px-6 pt-4">
-        <div class="mb-3">
+        <div id="status-toast-bar" class="mb-3">
           <span id="status-toast" class="text-xs text-slate-500">
             All changes save automatically in your browser.
           </span>
@@ -718,7 +745,7 @@
 
         <!-- SECTION: 1-ON-1 WHATSAPP-STYLE CHAT -->
         <div id="view-chat" class="hidden space-y-4">
-          <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[520px]">
+          <section class="bg-white border border-slate-200 rounded-2xl md:rounded-3xl shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[calc(100dvh-10.5rem)] md:min-h-[520px]">
             <!-- Left Contacts Panel -->
             <div id="chat-contacts-pane" class="md:col-span-4 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col">
               <div class="p-3.5 border-b border-slate-100 space-y-2.5">
@@ -762,7 +789,7 @@
                 <span id="chat-active-role-pill" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100/80 text-[#335c81]">Faculty</span>
               </div>
 
-              <div id="chat-messages-box" class="flex-1 p-4 space-y-2.5 overflow-y-auto max-h-[360px] min-h-[280px]"></div>
+              <div id="chat-messages-box" class="flex-1 p-4 space-y-2.5 overflow-y-auto max-h-[calc(100dvh-20rem)] md:max-h-[360px] min-h-[260px]"></div>
 
               <div class="px-3 pt-2 pb-1 flex flex-wrap gap-1.5 bg-white border-t border-slate-100" id="chat-quick-replies">
                 <button type="button" class="chat-quick-btn px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-100/80 text-[11px] text-slate-700 font-medium">Doubt in today's class</button>
@@ -1933,6 +1960,7 @@
     let showAllHomeServices = false;
     let chatsList = loadJSON(CHATS_STORAGE_KEY, DEFAULT_CHATS);
     let activeChatId = chatsList[0] ? chatsList[0].id : null;
+    let mobileChatThreadOpen = false;
     let chatFilter = 'All';
     let clubsList = loadJSON(CLUBS_STORAGE_KEY, DEFAULT_CLUBS);
     let clubFilter = 'All';
@@ -2348,8 +2376,25 @@
         btn.className = 'w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ' +
           (activeTab === key ? activeCls : inactiveCls);
         view.classList.toggle('hidden', activeTab !== key);
-        if (activeTab === key) activeSectionTitle.textContent = title;
+        if (activeTab === key) {
+          activeSectionTitle.textContent = title;
+          const mSubTitle = document.getElementById('mobile-subpage-title');
+          if (mSubTitle) mSubTitle.textContent = title;
+        }
       });
+
+      // Mobile Sub-Page Header (only affects <md; md: stays full)
+      const isHome = activeTab === 'home';
+      const mSubBar = document.getElementById('mobile-subpage-bar');
+      const hTopBar = document.getElementById('header-top-bar');
+      const hHeroCard = document.getElementById('hero-identity-card');
+      const statusBar = document.getElementById('status-toast-bar');
+      if (mSubBar && hTopBar && hHeroCard && statusBar) {
+        mSubBar.className = isHome ? 'hidden md:hidden' : 'flex md:hidden items-center justify-between gap-2';
+        hTopBar.className = isHome ? 'flex flex-wrap items-center justify-between gap-3 mb-4' : 'hidden md:flex flex-wrap items-center justify-between gap-3 mb-4';
+        hHeroCard.className = isHome ? 'bg-white/15 border border-white/15 rounded-2xl px-4 py-3.5 flex items-center justify-between gap-4' : 'hidden md:flex bg-white/15 border border-white/15 rounded-2xl px-4 py-3.5 items-center justify-between gap-4';
+        statusBar.className = isHome ? 'mb-3' : 'hidden md:block mb-3';
+      }
 
       // Highlight Bottom Navigation Bar
       const bnavActive = 'text-[#335c81] bg-slate-100/80/70';
@@ -3197,6 +3242,12 @@
     }
 
     function renderChat() {
+      const contactsPane = document.getElementById('chat-contacts-pane');
+      const threadPane = document.getElementById('chat-thread-pane');
+      if (contactsPane && threadPane) {
+        contactsPane.className = (mobileChatThreadOpen ? 'hidden md:flex' : 'flex') + ' md:col-span-4 border-b md:border-b-0 md:border-r border-slate-200 flex-col';
+        threadPane.className = (mobileChatThreadOpen ? 'flex' : 'hidden md:flex') + ' md:col-span-8 flex-col bg-slate-50/60';
+      }
       const searchQ = (document.getElementById('chat-search-input').value || '').trim().toLowerCase();
       const contactsEl = document.getElementById('chat-contacts-list');
       contactsEl.innerHTML = '';
@@ -3237,8 +3288,7 @@
             saveJSON(CHATS_STORAGE_KEY, chatsList);
             renderChat();
             renderTabs();
-            document.getElementById('chat-contacts-pane').classList.add('hidden', 'md:flex');
-            document.getElementById('chat-thread-pane').classList.remove('hidden');
+            mobileChatThreadOpen = true;
           });
           contactsEl.appendChild(btn);
         });
@@ -3438,7 +3488,20 @@
       renderChat();
     });
     document.getElementById('chat-back-btn').addEventListener('click', () => {
-      document.getElementById('chat-contacts-pane').classList.remove('hidden');
+      mobileChatThreadOpen = false;
+      renderChat();
+    });
+    document.getElementById('mobile-subpage-back').addEventListener('click', () => {
+      mobileChatThreadOpen = false;
+      activeTab = 'home';
+      renderTabs();
+    });
+    document.getElementById('mobile-subpage-menu').addEventListener('click', toggleSidebar);
+    document.getElementById('sidebar-nav').addEventListener('click', (e) => {
+      if (e.target.closest('button') && window.innerWidth < 768) {
+        sidebarOpen = false;
+        renderSidebar();
+      }
     });
     document.getElementById('chat-quick-replies').addEventListener('click', (e) => {
       const btn = e.target.closest('.chat-quick-btn');
